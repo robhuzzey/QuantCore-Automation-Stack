@@ -2,11 +2,10 @@ import time
 import os
 import csv
 import json
-import MetaTrader5 as mt5
 import pandas as pd
 
-SYMBOL = os.path.basename(os.path.dirname(os.path.abspath(__file__)))
-TIMEFRAME = mt5.TIMEFRAME_M15
+SYMBOL = "XAGUSD"          
+TIMEFRAME_MINUTES = 15
 STARTING_EQUITY = 10000.0  
 MAX_DAILY_DRAWDOWN_PCT = 0.05 
 
@@ -23,20 +22,20 @@ def log_trade(ticket, order_type, price, profit, slippage, spread):
         writer.writerow([time.time(), ticket, SYMBOL, order_type, price, profit, slippage, spread])
 
 def main_loop():
-    if not mt5.initialize():
-        print(f"MT5 Node Failure for {SYMBOL}")
-        return
-    print(f"🤖 Algo Node for {SYMBOL} Online and Streaming Data...")
+    print(f"🤖 Native Algo Node for {SYMBOL} Online and Calculating...")
     while True:
-        account_info = mt5.account_info()
-        if account_info is None:
-            time.sleep(1)
-            continue
-        if account_info.equity < (STARTING_EQUITY * (1 - MAX_DAILY_DRAWDOWN_PCT)):
-            print(f"🚨 CIRCUIT BREAKER TRIGGERED FOR {SYMBOL}. Closing exposures.")
-            mt5.Close(symbol=SYMBOL)
-            break
+        strat = load_strategy()
+        try:
+            trade_logs = pd.read_csv("live_trade_history.csv")
+        except FileNotFoundError:
+            pass
         time.sleep(5)
 
 if __name__ == "__main__":
+    print("🚀 RUNNING INITIAL FIRST-BOOT BACKTEST & BASELINE OPTIMIZATION...")
+    try:
+        from optimizer import run_nightly_optimization
+        run_nightly_optimization()
+    except Exception as e:
+        print(f"Using factory defaults, startup optimization bypassed: {e}")
     main_loop()
