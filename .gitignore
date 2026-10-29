@@ -1,0 +1,8 @@
+# Gitignore for QuantCore Automation Stack
+live_trade_history.csv
+optimizer_log.txt
+runtime_log.txt
+.env
+__pycache__/
+*.pyc
+.streamlit/

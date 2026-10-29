@@ -1,0 +1,11 @@
+{
+    "fast_ma": 14,
+    "slow_ma": 28,
+    "rsi_period": 14,
+    "rsi_overbought": 70,
+    "rsi_oversold": 30,
+    "stop_loss_points": 150,
+    "take_profit_points": 300,
+    "trailing_stop_activation": 100,
+    "max_spread_allowed": 35
+}
