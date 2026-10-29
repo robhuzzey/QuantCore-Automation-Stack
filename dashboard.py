@@ -3,98 +3,114 @@ import pandas as pd
 import json
 import glob
 import os
-import yfinance as yf
 
-st.set_page_config(layout="wide", page_title="AI Quant Command Station", initial_sidebar_state="collapsed")
+st.set_page_config(layout="wide", page_title="Quant Core Terminal", initial_sidebar_state="collapsed")
 
 st.markdown("""
     <style>
+    .stApp {
+        background-color: #0b0c10 !important;
+    }
     html, body, [data-testid="stWidgetLabel"], .stText, p, li {
-        font-size: 20px !important;
-        font-weight: 500 !important;
-        color: #e0e0e0 !important;
+        font-size: 22px !important;
+        font-weight: 600 !important;
+        color: #ffffff !important;
     }
     h1 {
         font-size: 46px !important;
-        font-weight: 800 !important;
-        color: #FFD700 !important;
-        margin-bottom: 0px !important;
+        font-weight: 900 !important;
+        color: #ffffff !important; 
+        margin-bottom: 25px !important;
+        border-bottom: 3px solid #1f2833;
+        padding-bottom: 12px;
+        letter-spacing: -0.5px;
     }
     h2 {
         font-size: 32px !important;
-        font-weight: 700 !important;
-        color: #ffffff !important;
-    }
-    h3 {
-        font-size: 24px !important;
-        font-weight: 600 !important;
+        font-weight: 800 !important;
+        color: #909caf !important;
+        margin-top: 20px !important;
+        margin-bottom: 20px !important;
+        text-transform: uppercase;
+        letter-spacing: 1px;
     }
     [data-testid="stMetricValue"] {
-        font-size: 54px !important;
+        font-size: 64px !important;
         font-weight: 900 !important;
-        color: #ffffff !important;
+        color: #00ffcc !important;
     }
     [data-testid="stMetricLabel"] {
         font-size: 18px !important;
-        font-weight: 700 !important;
+        font-weight: 800 !important;
         text-transform: uppercase;
-        color: #888888 !important;
+        color: #909caf !important;
+        letter-spacing: 1px;
     }
     .stDataFrame, table, th, td {
-        font-size: 18px !important;
+        font-size: 22px !important;
         font-family: 'Courier New', monospace !important;
     }
     th {
-        background-color: #111111 !important;
-        color: #FFD700 !important;
+        background-color: #1f2833 !important;
+        color: #00ffcc !important;
+        font-weight: 900 !important;
+        padding: 14px !important;
+        border: 2px solid #45a29e !important;
+    }
+    td {
+        background-color: #151922 !important;
+        color: #ffffff !important;
+        padding: 14px !important;
+        border: 1px solid #1f2833 !important;
     }
     [data-testid="stSidebar"] {
         display: none !important;
     }
-    .param-box {
-        background-color: #1a1a1a;
-        padding: 15px;
+    .pnl-card {
+        background-color: #151922;
+        padding: 24px;
         border-radius: 8px;
-        border: 1px solid #333333;
-        margin-bottom: 10px;
+        border: 3px solid #45a29e;
+        text-align: center;
+        margin-bottom: 15px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+    }
+    .cfd-name {
+        color: #ff9f1c !important;
+        font-size: 28px !important;
+        font-weight: 900 !important;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        display: block;
+        margin-bottom: 8px;
+        border-bottom: 1px solid #1f2833;
+        padding-bottom: 4px;
+    }
+    header, [data-testid="stHeader"], .stAppDeployButton {
+        visibility: hidden !important;
+        display: none !important;
+    }
+    footer {
+        visibility: hidden !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-st.title("🤖 HERMES PORTFOLIO CONTROL STATION")
+st.title("🎛️ COLD TRADING CORE TERMINAL")
 
 if "run_count" not in st.session_state:
     st.session_state.run_count = 0
 st.session_state.run_count += 1
 
-SYMBOL_MAP = {"XAUUSD": "GC=F", "WTI": "CL=F", "XAGUSD": "SI=F"}
 asset_dirs = [d for d in glob.glob("*/") if os.path.exists(os.path.join(d, "active_strategy.json"))]
 total_pnl = 0.0
 all_history = []
 asset_pnl_breakdown = {}
-live_prices = {}
-active_strategies = {}
 
 for folder in asset_dirs:
     asset_name = folder.replace("/", "").replace("\\", "")
     asset_pnl_breakdown[asset_name] = 0.0
-    
     try:
-        yf_ticker = SYMBOL_MAP.get(asset_name, "GC=F")
-        ticker_df = yf.download(yf_ticker, period="1d", interval="5m", progress=False, auto_adjust=True)
-        if not ticker_df.empty:
-            if isinstance(ticker_df.columns, pd.MultiIndex):
-                ticker_df.columns = ticker_df.columns.get_level_values(0)
-            live_prices[asset_name] = ticker_df
-    except Exception:
-        pass
-
-    try:
-        strategy_file = os.path.join(folder, "active_strategy.json")
-        if os.path.exists(strategy_file):
-            with open(strategy_file, "r") as f:
-                active_strategies[asset_name] = json.load(f)
-            
         history_file = os.path.join(folder, "live_trade_history.csv")
         if os.path.exists(history_file):
             node_df = pd.read_csv(history_file)
@@ -106,56 +122,44 @@ for folder in asset_dirs:
     except Exception:
         pass
 
-col1, col2, col3 = st.columns(3)
-col1.metric(label="Real Account Equity", value=f"${10000.0 + total_pnl:,.2f}", delta=f"${total_pnl:+.2f}" if total_pnl != 0 else None)
-col2.metric(label="Computational Engines", value=len(asset_dirs))
-col3.metric(label="Telemetry Syncs", value=f"#{st.session_state.run_count}")
+col_cap1, col_cap2, col_cap3 = st.columns(3)
+col_cap1.metric(label="Total Portfolio Capital", value=f"${10000.0 + total_pnl:,.2f}", delta=f"${total_pnl:+.2f}" if total_pnl != 0 else None)
+col2_metric = col_cap2.metric(label="Active CFD Trackers", value=len(asset_dirs))
+col3_metric = col_cap3.metric(label="Terminal Refresh Cycle", value=f"#{st.session_state.run_count}")
 
-st.markdown("<hr>", unsafe_allow_html=True)
+st.markdown("<br>", unsafe_allow_html=True)
 
-st.header("🗂️ Active Performance Allocation & Real-Time Price Streams")
+st.header("🗂️ Asset-by-Asset Realised Performance Allocation")
 breakdown_cols = st.columns(len(asset_pnl_breakdown) if len(asset_pnl_breakdown) > 0 else 1)
 
 for idx, (asset, pnl) in enumerate(asset_pnl_breakdown.items()):
     with breakdown_cols[idx]:
-        st.subheader(f"🌐 Node: {asset}")
-        
-        if asset in live_prices and not live_prices[asset].empty:
-            close_series = live_prices[asset]["Close"].squeeze().dropna()
-            current_price = float(close_series.iloc[-1])
-            st.metric(label="Live Exchange Price", value=f"${current_price:,.2f}")
-            st.line_chart(close_series.tail(25), height=180, use_container_width=True)
-        else:
-            st.warning("Connecting to exchange feed...")
-            
-        if asset in active_strategies:
-            s = active_strategies[asset]
-            st.markdown(f"""
-            <div class='param-box'>
-                <b>🎯 Strategy Config</b><br>
-                • MA Crossover: {s.get('fast_ma', 14)} / {s.get('slow_ma', 28)}<br>
-                • RSI Window: {s.get('rsi_period', 14)} (Oversold: {s.get('rsi_oversold', 30)} / Overbought: {s.get('rsi_overbought', 70)})
-            </div>
-            """, unsafe_allow_html=True)
-            
-        st.metric(label="Realised Yield (PnL)", value=f"${pnl:,.2f}")
+        st.markdown(f"""
+        <div class='pnl-card'>
+            <span class='cfd-name'>🔥 {asset}</span>
+            <span style='font-size: 46px; font-weight:900; color: {"#00ffcc" if pnl >= 0 else "#ff4d4d"};'>${pnl:,.2f}</span>
+        </div>
+        """, unsafe_allow_html=True)
 
-st.markdown("<hr><br>", unsafe_allow_html=True)
+st.markdown("<br>", unsafe_allow_html=True)
 
-st.header("📈 Real-Time Execution Order History (Demo Account)")
+st.header("📈 Real-Time Ticket Execution & Transaction Stream Ledger")
+
 if all_history and len(all_history) > 0:
     combined_df = pd.concat(all_history).sort_values(by="timestamp", ascending=False)
+    combined_df['timestamp'] = pd.to_datetime(combined_df['timestamp'], unit='s').dt.strftime('%Y-%m-%d %H:%M:%S')
+    combined_df.columns = [c.upper() for c in combined_df.columns]
     st.dataframe(combined_df, use_container_width=True, hide_index=True)
 else:
-    st.info("Awaiting entry criteria triggers... No active positions open.")
+    st.info("Awaiting structural indicator breakthroughs... No executions registered on this session ledger.")
 
 st.components.v1.html(
-    """
+    \"\"\"
     <script>
     setTimeout(function(){
         window.parent.location.reload();
     }, 60000);
     </script>
-    """,
+    \"\"\",
     height=0
 )
